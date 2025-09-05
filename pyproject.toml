@@ -1,10 +1,10 @@
-[build-system]
+﻿[build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "kv-optkit"
-version = "0.5.1"
+version = "0.5.2"
 description = "Optimization layer for LLM inference with KV-cache management"
 readme = "README.md"
 license = { text = "Apache-2.0" }
