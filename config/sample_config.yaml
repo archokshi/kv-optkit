@@ -1,0 +1,51 @@
+slo:
+  latency_p95_ms: 2000.0
+  max_accuracy_delta_pct: 0.5
+
+budgets:
+  hbm_util_target: 0.85
+  offload_bw_gbps: 120.0
+
+policy:
+  keep_recent_tokens: 4096
+  eviction:
+    - age_decay
+  tiers:
+    - HBM
+    - DDR
+    - CXL
+    - NVMe
+
+plugins:
+  # Reuse plugins for KV cache reuse
+  reuse:
+    - name: lmcache
+      enabled: true
+      backend: redis://localhost:6379  # Redis server URL
+      ttl: 3600  # Time-to-live for cache entries in seconds
+      min_sequence_length: 16  # Minimum sequence length to cache
+      max_cached_sequences: 1000  # Maximum number of sequences to cache
+      metrics_interval: 60  # Metrics collection interval in seconds
+      
+  # Quantization plugins for KV cache compression
+  quantization:
+    - name: kivi
+      enabled: true
+      bitwidth: 4  # Target bitwidth (e.g., 2, 4, 8)
+      layers: "0-31"  # Layers to apply quantization (0-based, inclusive)
+      older_than_tokens: 1024  # Only quantize tokens older than this
+      min_sequence_length: 32  # Minimum sequence length to quantize
+      group_size: 64  # Group size for quantization
+      symmetric: true  # Use symmetric quantization
+      
+  # Optional: MiniKV plugin (simplified version of KIVI)
+  # - name: minikv
+  #   enabled: false
+  #   bitwidth: 2
+  #   layers: "16-31"  # Apply to later layers
+  #   older_than_tokens: 2048
+  #   min_sequence_length: 64
+
+guardrails:
+  ab_shadow_fraction: 0.05
+  rollback_on_acc_delta: true

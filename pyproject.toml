@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kv-optkit"
+version = "0.5.1"
+description = "Optimization layer for LLM inference with KV-cache management"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [ { name = "KV-OptKit Maintainers" } ]
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn>=0.23",
+  "pydantic>=2",
+  "PyYAML>=6",
+  "numpy>=1.24",
+  "prometheus-client>=0.16",
+  "matplotlib>=3.7",
+  "pandas>=2.0",
+  "requests>=2.31",
+]
+
+[project.urls]
+Homepage = "https://github.com/archokshi/kv-optkit"
+Repository = "https://github.com/archokshi/kv-optkit"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["kvopt*"]
+
+[tool.setuptools.package-data]
+"" = ["LICENSE", "README.md"]
+
+[project.scripts]
+kvopt-server = "kvopt.server.main:run"

@@ -1,0 +1,111 @@
+2025-08-23 19:58:30,191 - __main__ - INFO - Project root: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit
+2025-08-23 19:58:30,192 - __main__ - INFO - Python path: ['C:\\Users\\alpes\\OneDrive\\Desktop\\Windsurf_KVProject\\kv-optkit\\kvopt', 'C:\\Users\\alpes\\OneDrive\\Desktop\\Windsurf_KVProject\\kv-optkit', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'C:\\Users\\alpes\\AppData\\Roaming\\Python\\Python313\\site-packages', 'C:\\Python313\\Lib\\site-packages']
+2025-08-23 19:58:30,192 - __main__ - INFO - 
+================================================================================
+2025-08-23 19:58:30,192 - __main__ - INFO - Starting plugin tests for: lmcache, kivi
+2025-08-23 19:58:30,193 - __main__ - INFO - Current working directory: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit
+2025-08-23 19:58:30,193 - __main__ - INFO - Python version: 3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]
+2025-08-23 19:58:30,193 - __main__ - INFO - Python path: ['C:\\Users\\alpes\\OneDrive\\Desktop\\Windsurf_KVProject\\kv-optkit\\kvopt', 'C:\\Users\\alpes\\OneDrive\\Desktop\\Windsurf_KVProject\\kv-optkit', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'C:\\Users\\alpes\\AppData\\Roaming\\Python\\Python313\\site-packages', 'C:\\Python313\\Lib\\site-packages']
+2025-08-23 19:58:30,194 - __main__ - INFO - ================================================================================
+
+2025-08-23 19:58:30,194 - __main__ - INFO - 
+****************************************
+2025-08-23 19:58:30,194 - __main__ - INFO - TESTING PLUGIN: LMCACHE
+2025-08-23 19:58:30,195 - __main__ - INFO - ****************************************
+2025-08-23 19:58:30,195 - __main__ - INFO - 
+==================================================
+2025-08-23 19:58:30,195 - __main__ - INFO - Testing plugin: lmcache
+2025-08-23 19:58:30,195 - __main__ - INFO - ==================================================
+2025-08-23 19:58:30,196 - __main__ - INFO - 
+Python Path:
+2025-08-23 19:58:30,196 - __main__ - INFO -   - C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit\kvopt
+2025-08-23 19:58:30,196 - __main__ - INFO -   - C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit
+2025-08-23 19:58:30,196 - __main__ - INFO -   - C:\Python313\python313.zip
+2025-08-23 19:58:30,197 - __main__ - INFO -   - C:\Python313\DLLs
+2025-08-23 19:58:30,197 - __main__ - INFO -   - C:\Python313\Lib
+2025-08-23 19:58:30,197 - __main__ - INFO -   - C:\Python313
+2025-08-23 19:58:30,198 - __main__ - INFO -   - C:\Users\alpes\AppData\Roaming\Python\Python313\site-packages
+2025-08-23 19:58:30,198 - __main__ - INFO -   - C:\Python313\Lib\site-packages
+2025-08-23 19:58:30,198 - __main__ - INFO - 
+Looking for plugin file: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit\kvopt\plugins\lmcache_plugin.py
+2025-08-23 19:58:30,200 - __main__ - INFO - 
+1. Importing module: kvopt.plugins.lmcache_plugin
+2025-08-23 19:58:30,620 - __main__ - INFO -   - Found spec: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit\kvopt\plugins\lmcache_plugin.py
+2025-08-23 19:58:30,620 - __main__ - INFO -   - Loader: <_frozen_importlib_external.SourceFileLoader object at 0x000001CE6F5FFA70>
+2025-08-23 19:58:30,672 - __main__ - ERROR - 
+=== DEBUGGING INFO ===
+2025-08-23 19:58:30,672 - __main__ - ERROR - Python version: 3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]
+2025-08-23 19:58:30,672 - __main__ - ERROR - Current working directory: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit
+2025-08-23 19:58:30,673 - __main__ - ERROR - Module search path: ['C:\\Users\\alpes\\OneDrive\\Desktop\\Windsurf_KVProject\\kv-optkit\\kvopt', 'C:\\Users\\alpes\\OneDrive\\Desktop\\Windsurf_KVProject\\kv-optkit', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'C:\\Users\\alpes\\AppData\\Roaming\\Python\\Python313\\site-packages', 'C:\\Python313\\Lib\\site-packages']
+2025-08-23 19:58:30,677 - __main__ - ERROR - Module found by pkgutil: True
+2025-08-23 19:58:30,679 - __main__ - INFO - 
+****************************************
+2025-08-23 19:58:30,679 - __main__ - INFO - TESTING PLUGIN: KIVI
+2025-08-23 19:58:30,679 - __main__ - INFO - ****************************************
+2025-08-23 19:58:30,679 - __main__ - INFO - 
+==================================================
+2025-08-23 19:58:30,680 - __main__ - INFO - Testing plugin: kivi
+2025-08-23 19:58:30,680 - __main__ - INFO - ==================================================
+2025-08-23 19:58:30,680 - __main__ - INFO - 
+Python Path:
+2025-08-23 19:58:30,680 - __main__ - INFO -   - C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit\kvopt
+2025-08-23 19:58:30,681 - __main__ - INFO -   - C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit
+2025-08-23 19:58:30,681 - __main__ - INFO -   - C:\Python313\python313.zip
+2025-08-23 19:58:30,681 - __main__ - INFO -   - C:\Python313\DLLs
+2025-08-23 19:58:30,681 - __main__ - INFO -   - C:\Python313\Lib
+2025-08-23 19:58:30,682 - __main__ - INFO -   - C:\Python313
+2025-08-23 19:58:30,682 - __main__ - INFO -   - C:\Users\alpes\AppData\Roaming\Python\Python313\site-packages
+2025-08-23 19:58:30,682 - __main__ - INFO -   - C:\Python313\Lib\site-packages
+2025-08-23 19:58:30,682 - __main__ - INFO - 
+Looking for plugin file: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit\kvopt\plugins\kivi_plugin.py
+2025-08-23 19:58:30,683 - __main__ - INFO - 
+1. Importing module: kvopt.plugins.kivi_plugin
+2025-08-23 19:58:30,683 - __main__ - INFO -   - Found spec: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit\kvopt\plugins\kivi_plugin.py
+2025-08-23 19:58:30,683 - __main__ - INFO -   - Loader: <_frozen_importlib_external.SourceFileLoader object at 0x000001CE703E7FB0>
+2025-08-23 19:58:30,972 - __main__ - ERROR - 
+=== DEBUGGING INFO ===
+2025-08-23 19:58:30,972 - __main__ - ERROR - Python version: 3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]
+2025-08-23 19:58:30,972 - __main__ - ERROR - Current working directory: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit
+2025-08-23 19:58:30,973 - __main__ - ERROR - Module search path: ['C:\\Users\\alpes\\OneDrive\\Desktop\\Windsurf_KVProject\\kv-optkit\\kvopt', 'C:\\Users\\alpes\\OneDrive\\Desktop\\Windsurf_KVProject\\kv-optkit', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'C:\\Users\\alpes\\AppData\\Roaming\\Python\\Python313\\site-packages', 'C:\\Python313\\Lib\\site-packages']
+2025-08-23 19:58:30,974 - __main__ - ERROR - Module found by pkgutil: True
+2025-08-23 19:58:30,980 - __main__ - INFO - 
+Test completed. Check plugin_test.log for detailed logs.
+2025-08-23 21:46:18,482 - __main__ - INFO - ================================================================================
+2025-08-23 21:46:18,483 - __main__ - INFO - PLUGIN TESTING SESSION STARTED
+2025-08-23 21:46:18,483 - __main__ - INFO - ================================================================================
+2025-08-23 21:46:18,484 - __main__ - INFO - Python version: 3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]
+2025-08-23 21:46:18,484 - __main__ - INFO - Working directory: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit
+2025-08-23 21:46:18,484 - __main__ - INFO - Project root: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit
+2025-08-23 21:46:18,485 - __main__ - INFO - Python path: ['C:\\Users\\alpes\\OneDrive\\Desktop\\Windsurf_KVProject\\kv-optkit', 'C:\\Users\\alpes\\OneDrive\\Desktop\\Windsurf_KVProject\\kv-optkit', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'C:\\Users\\alpes\\AppData\\Roaming\\Python\\Python313\\site-packages', 'C:\\Python313\\Lib\\site-packages']
+2025-08-23 21:46:18,485 - __main__ - INFO - 
+Environment variables:
+2025-08-23 21:46:18,485 - __main__ - INFO - PYTHONPATH: Not set
+2025-08-23 21:46:18,486 - __main__ - INFO - PATH: C:\Python313\Scripts\;C:\Python313\;C:\Program Files\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\ProgramData\chocolatey\bin;C:\Program Files\Java\jdk-19\bin;C:\Program Files\Docker\Docker\resources\bin;C:\Users\alpes\anaconda3\condabin;C:\msys64\mingw64\bin;C:\Program Files\nodejs\;C:\Program Files\JetBrains\PyCharm Community Edition 2022.3.2\bin;;C:\Users\alpes\AppData\Local\Programs\Python\Python39\;C:\Users\alpes\AppData\Local\Programs\Python\Python39\Scripts\;C:\Users\alpes\AppData\Local\Microsoft\WindowsApps;;C:\Users\alpes\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\alpes\AppData\Local\Programs\Ollama;C:\Users\alpes\AppData\Local\Programs\Windsurf\bin;C:\Users\alpes\AppData\Roaming\npm;c:\Users\alpes\.windsurf\extensions\ms-python.debugpy-2025.6.0-win32-x64\bundled\scripts\noConfigScripts
+2025-08-23 21:46:18,486 - __main__ - INFO - PYTHONHOME: Not set
+2025-08-23 21:46:18,487 - __main__ - INFO - 
+Looking for plugin files in: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit\kvopt\plugins
+2025-08-23 21:46:18,488 - __main__ - INFO - Found plugin files:
+2025-08-23 21:46:18,489 - __main__ - INFO -  - kivi_plugin.py
+2025-08-23 21:46:18,490 - __main__ - INFO -  - lmcache_plugin.py
+2025-08-23 21:46:18,490 - __main__ - INFO -  - __init__.py
+2025-08-23 21:46:19,060 - __main__ - INFO - KIVIPlugin class: <class 'kvopt.plugins.kivi_plugin.KIVIPlugin'>
+2025-08-23 21:46:19,060 - __main__ - INFO - 
+================================================================================
+2025-08-23 21:46:19,060 - __main__ - INFO - Testing instantiation of LMCachePlugin from kvopt.plugins.lmcache_plugin
+2025-08-23 21:46:19,060 - __main__ - INFO - Working directory: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit
+2025-08-23 21:46:19,061 - __main__ - INFO - Attempting to import module: kvopt.plugins.lmcache_plugin
+2025-08-23 21:46:19,069 - __main__ - INFO - 
+================================================================================
+2025-08-23 21:46:19,069 - __main__ - INFO - Testing instantiation of KIVIPlugin from kvopt.plugins.kivi_plugin
+2025-08-23 21:46:19,069 - __main__ - INFO - Working directory: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit
+2025-08-23 21:46:19,069 - __main__ - INFO - Attempting to import module: kvopt.plugins.kivi_plugin
+2025-08-23 21:46:19,072 - __main__ - INFO - Module file: C:\Users\alpes\OneDrive\Desktop\Windsurf_KVProject\kv-optkit\kvopt\plugins\kivi_plugin.py
+2025-08-23 21:46:19,073 - __main__ - INFO - Looking for class: KIVIPlugin
+2025-08-23 21:46:19,075 - __main__ - INFO - Class doc: KIVI (Kernel-Inspired Vector Quantization) plugin for KV cache.
+2025-08-23 21:46:19,075 - __main__ - INFO - Available methods: dequantize, get_metrics, on_shutdown, on_startup, quantize, validate_config
+2025-08-23 21:46:19,075 - __main__ - INFO - Creating instance with config: {'name': 'test_kivi', 'enabled': True, 'priority': 100, 'bitwidth': 2, 'group_size': 64, 'min_layer': 0, 'min_tokens': 8192}
+2025-08-23 21:46:19,078 - __main__ - INFO - 
+Calling on_startup...
+2025-08-23 21:46:19,078 - kvopt.plugins.kivi_plugin - INFO - KIVI Plugin initialized - 2-bit quantization, group size: 64
+2025-08-23 21:46:19,080 - __main__ - INFO - 
+Getting metrics...

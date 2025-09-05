@@ -1,0 +1,61 @@
+{
+  "annotations": {"list": []},
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HBM Utilization",
+      "targets": [{"expr": "kvopt_hbm_utilization"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "P95 Latency (ms)",
+      "targets": [{"expr": "kvopt_p95_latency_ms"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "TTFT (ms)",
+      "targets": [{"expr": "kvopt_ttft_ms"}]
+    },
+    {
+      "type": "stat",
+      "title": "Reuse Hits",
+      "targets": [{"expr": "kvopt_reuse_hits_total"}]
+    },
+    {
+      "type": "stat",
+      "title": "Reuse Misses",
+      "targets": [{"expr": "kvopt_reuse_misses_total"}]
+    },
+    {
+      "type": "stat",
+      "title": "Tokens Evicted",
+      "targets": [{"expr": "kvopt_tokens_evicted_total"}]
+    },
+    {
+      "type": "stat",
+      "title": "Tokens Quantized",
+      "targets": [{"expr": "kvopt_tokens_quantized_total"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "DDR Utilization",
+      "targets": [{"expr": "kvopt_ddr_utilization"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "DDR Used (GB)",
+      "targets": [{"expr": "kvopt_ddr_used_gb"}]
+    },
+    {
+      "type": "bargauge",
+      "title": "Autopilot Applies vs Rollbacks",
+      "targets": [
+        {"expr": "kvopt_autopilot_applies_total"},
+        {"expr": "kvopt_autopilot_rollbacks_total"}
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "title": "KV-OptKit",
+  "version": 1
+}

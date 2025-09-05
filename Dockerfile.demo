@@ -1,0 +1,10 @@
+# Minimal image to run the demo without bind mounts
+FROM python:3.11-slim
+WORKDIR /app
+# Copy project into image (build context is kv-optkit/)
+COPY . /app/kv-optkit
+# Install only runtime deps needed for demo (avoid heavy dev/test/docs deps)
+RUN python -m pip install --upgrade pip && \
+    python -m pip install --no-cache-dir numpy>=1.20.0 redis>=4.5.0 fakeredis>=2.10.0 pyyaml>=6.0 "pydantic<2" typing-extensions>=4.7
+# Default command runs the reuse demo against Redis service
+CMD ["python", "/app/kv-optkit/examples/demo_reuse.py", "--backend", "redis://redis:6379"]

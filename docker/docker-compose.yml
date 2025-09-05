@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  kvopt-agent:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.kvopt
+    container_name: kvopt-agent
+    ports:
+      - "9000:9000"
+    volumes:
+      - ../config:/app/config:ro
+    environment:
+      - KVOPT_ENGINE=sim
+      - KVOPT_CONFIG=/app/config/sample_config.yaml
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s

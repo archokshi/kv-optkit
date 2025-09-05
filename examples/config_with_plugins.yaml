@@ -1,0 +1,46 @@
+# KV-OptKit Configuration with Plugins
+
+# SLO Settings
+slo:
+  latency_p95_ms: 2000.0
+  max_accuracy_delta_pct: 0.5
+
+# Budget Settings
+budgets:
+  hbm_util_target: 0.85
+  offload_bw_gbps: 120.0
+
+# Policy Settings
+policy:
+  keep_recent_tokens: 4096
+  eviction:
+    - "age_decay"
+  tiers:
+    - "HBM"
+    - "DDR"
+    - "CXL"
+    - "NVMe"
+
+# Guardrail Settings
+guardrails:
+  ab_shadow_fraction: 0.05
+  rollback_on_acc_delta: true
+
+# Plugin Configurations
+plugins:
+  lmcache:
+    enabled: true
+    priority: 10
+    plugin_type: kv_cache
+    backend: "fakeredis://"
+    ttl: 3600
+    min_sequence_length: 1
+    max_cache_size: 2048
+
+  kivi:
+    enabled: true
+    priority: 20
+    plugin_type: quantization
+    bitwidth: 4
+    group_size: 64
+    min_tokens: 1024
