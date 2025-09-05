@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kv-optkit"
-version = "0.5.1"
+version = "0.5.3"
 description = "Optimization layer for LLM inference with KV-cache management"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -20,6 +20,7 @@ dependencies = [
   "matplotlib>=3.7",
   "pandas>=2.0",
   "requests>=2.31",
+  "httpx>=0.24",
 ]
 
 [project.urls]
@@ -34,7 +35,7 @@ where = ["."]
 include = ["kvopt*"]
 
 [tool.setuptools.package-data]
-"" = ["LICENSE", "README.md"]
+"*" = ["LICENSE", "README.md"]
 
 [project.scripts]
 kvopt-server = "kvopt.server.main:run"
