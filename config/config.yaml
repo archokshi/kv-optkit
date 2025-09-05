@@ -1,0 +1,37 @@
+adapter:
+  type: sim  # or 'vllm' for production
+  hbm_size_gb: 80.0
+  ddr_size_gb: 1000.0
+  cxl_size_gb: 4000.0
+  nvme_size_gb: 16000.0
+  offload_bandwidth_gbps: 100.0
+  quantization_enabled: true
+
+policy:
+  eviction_policy: "lru"
+  offload_policy: "coldest"
+  quantization_policy: "aggressive"
+  tiers: ["hbm", "ddr", "cxl", "nvme"]
+  min_hbm_utilization: 0.7
+  max_hbm_utilization: 0.9
+  check_interval_ms: 1000
+
+guard:
+  enable_slo_guard: true
+  max_latency_ms: 2000
+  max_accuracy_drop_pct: 1.0
+  max_offload_ratio: 0.5
+  max_quantization_ratio: 0.8
+  metrics_window_size: 100
+
+scheduler:
+  enable_batch_processing: true
+  batch_size: 32
+  max_concurrent_batches: 4
+  timeout_ms: 5000
+
+logging:
+  level: "INFO"
+  file: "kvopt.log"
+  max_size_mb: 100
+  backup_count: 5

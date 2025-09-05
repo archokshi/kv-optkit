@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kv-optkit
+version: 0.4.1
+appVersion: 0.4.1
+description: KV-OptKit API server Helm chart
+Type: application

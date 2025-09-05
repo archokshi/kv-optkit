@@ -1,0 +1,3 @@
+hbm_gb,p95_ms,ttft_s,ddr_gb,evicted,quantized,reuse_hits,reuse_misses,applies,rollbacks
+12.5,2100,0.55,24.0,100,50,1000,200,10,1
+11.0,1800,0.45,22.5,150,80,1300,250,18,2

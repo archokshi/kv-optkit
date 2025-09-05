@@ -1,0 +1,10 @@
+# Minimal image to run the demo without bind mounts
+FROM python:3.11-slim
+WORKDIR /app
+# Copy only what's needed
+COPY . /app/kv-optkit
+# Install requirements for plugins
+RUN python -m pip install --upgrade pip && \
+    python -m pip install -r /app/kv-optkit/requirements-plugins.txt
+# Default command runs the reuse demo against Redis service
+CMD ["python", "/app/kv-optkit/examples/demo_reuse.py", "--backend", "redis://redis:6379"]

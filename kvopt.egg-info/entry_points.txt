@@ -1,0 +1,2 @@
+[console_scripts]
+kvopt-server = kvopt.server.main:main

@@ -1,0 +1,27 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application code
+COPY . .
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV KVOPT_PORT=9000
+ENV KVOPT_ENGINE=sim
+ENV KVOPT_CONFIG=/app/config/sample_config.yaml
+
+# Expose the port the app runs on
+EXPOSE 9000
+
+# Command to run the application
+CMD ["python", "-m", "kvopt.server.main"]

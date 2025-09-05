@@ -1,0 +1,32 @@
+services:
+  kvopt-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kv-optkit:dev
+    container_name: kvopt-agent
+    ports:
+      - "9000:9000"
+    environment:
+      - KVOPT_CONFIG=config/config.yaml
+    profiles: ["sim"]
+
+  prometheus:
+    image: prom/prometheus
+    container_name: kvopt-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    profiles: ["obs"]
+
+  grafana:
+    image: grafana/grafana
+    container_name: kvopt-grafana
+    volumes:
+      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./grafana-dashboard.json:/var/lib/grafana/dashboards/kvopt.json
+    ports:
+      - "3000:3000"
+    profiles: ["obs"]

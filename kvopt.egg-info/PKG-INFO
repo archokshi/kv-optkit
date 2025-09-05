@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: kvopt
+Version: 0.1.0
+License-File: LICENSE
+Requires-Dist: fastapi>=0.68.0
+Requires-Dist: uvicorn>=0.15.0
+Requires-Dist: pydantic>=1.8.0
+Requires-Dist: pyyaml>=5.4.1
+Requires-Dist: requests>=2.26.0
+Dynamic: license-file
+Dynamic: requires-dist
