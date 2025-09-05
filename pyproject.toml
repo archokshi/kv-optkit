@@ -4,7 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kv-optkit"
+<<<<<<< HEAD
 version = "0.5.2"
+=======
+version = "0.5.1"
+>>>>>>> 2edf7bf (chore: initial commit with package at repo root)
 description = "Optimization layer for LLM inference with KV-cache management"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -20,7 +24,10 @@ dependencies = [
   "matplotlib>=3.7",
   "pandas>=2.0",
   "requests>=2.31",
+<<<<<<< HEAD
   "httpx>=0.24",
+=======
+>>>>>>> 2edf7bf (chore: initial commit with package at repo root)
 ]
 
 [project.urls]
