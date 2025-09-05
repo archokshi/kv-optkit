@@ -54,7 +54,8 @@ class PluginConfig(BaseModel):
     plugin_type: PluginType
     
     class Config:
-        extra = "forbid"  # Don't allow extra fields
+        # Be permissive so sample configs with additional hints don't fail validation
+        extra = "ignore"
 
 
 class LMCacheConfig(PluginConfig):
@@ -119,15 +120,59 @@ class Config(BaseModel):
 
         # Convert plugin configs to proper types
         if 'plugins' in data:
-            plugin_configs = {}
-            for name, config in data['plugins'].items():
-                if name.lower() == 'lmcache':
-                    plugin_configs[name] = LMCacheConfig(**config)
-                elif name.lower() == 'kivi':
-                    plugin_configs[name] = KIVIConfig(**config)
+            plugins_raw = data['plugins']
+            plugin_configs: Dict[str, Any] = {}
+
+            def add_plugin(plugin_name: str, cfg: dict, group: Optional[str] = None):
+                # Remove fields not accepted by PluginConfig/children
+                cfg = dict(cfg or {})
+                cfg.pop('name', None)
+
+                key = plugin_name
+                lname = plugin_name.lower()
+                gname = (group or '').lower()
+
+                if lname == 'lmcache' or gname in ('reuse', 'kv_cache'):
+                    plugin_configs[key] = LMCacheConfig(**cfg)
+                elif lname == 'kivi' or gname in ('quantization',):
+                    plugin_configs[key] = KIVIConfig(**cfg)
                 else:
-                    # Default to base plugin config for unknown plugins
-                    plugin_configs[name] = PluginConfig(plugin_type=config.get('plugin_type'), **config)
+                    # Fallback: try to infer plugin_type from group or cfg
+                    inferred_type = cfg.get('plugin_type')
+                    if inferred_type is None and gname:
+                        try:
+                            inferred_type = PluginType(gname)  # may raise ValueError
+                        except Exception:
+                            inferred_type = PluginType.KV_CACHE
+                    plugin_configs[key] = PluginConfig(
+                        plugin_type=inferred_type if isinstance(inferred_type, PluginType) else PluginType(str(inferred_type)) if inferred_type else PluginType.KV_CACHE,
+                        **{k: v for k, v in cfg.items() if k != 'plugin_type'}
+                    )
+
+            if isinstance(plugins_raw, dict):
+                # Two supported shapes:
+                # 1) Flat: {"lmcache": {..}, "kivi": {..}}
+                # 2) Grouped: {"reuse": [{name: lmcache, ...}], "quantization": [{name: kivi, ...}]}
+                for group_or_name, val in plugins_raw.items():
+                    if isinstance(val, list):
+                        for item in val:
+                            pname = item.get('name') if isinstance(item, dict) else None
+                            if not pname:
+                                continue  # skip invalid entries
+                            add_plugin(pname, item, group=group_or_name)
+                    elif isinstance(val, dict):
+                        # Flat mapping: key is the plugin name
+                        add_plugin(group_or_name, val, group=None)
+                    else:
+                        # Unsupported shape; skip
+                        continue
+            elif isinstance(plugins_raw, list):
+                # List of plugin dicts with required 'name'
+                for item in plugins_raw:
+                    if not isinstance(item, dict) or 'name' not in item:
+                        continue
+                    add_plugin(item['name'], item, group=None)
+
             data['plugins'] = plugin_configs
             
         return cls(**data)
