@@ -20,8 +20,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt || true
-          pip install pytest requests matplotlib pandas fastapi uvicorn prometheus-client
+          pip install -r requirements.txt
+          # Install the package itself and ensure extras are resolvable from pyproject
+          pip install -e .
+          # Ensure all test deps are present explicitly (belt-and-suspenders)
+          pip install pytest httpx requests matplotlib pandas fastapi uvicorn prometheus-client
       - name: Run tests
         env:
           PYTHONPATH: ${{ github.workspace }}
