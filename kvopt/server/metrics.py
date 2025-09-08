@@ -132,6 +132,16 @@ latency_hist = Histogram(
     registry=registry,
 )
 
+# Ensure key observability metrics are present in exports even before telemetry updates
+# Some Prometheus clients only emit samples after first set/inc; touch them with zero.
+try:
+    governor_throttle_events.inc(0.0)
+    offload_governed_bytes.inc(0.0)
+    offload_tick_cap_bytes.set(0.0)
+except Exception:
+    # Best effort; if client internals change, avoid breaking imports
+    pass
+
 
 def update_from_telemetry(t: Dict[str, Any]) -> None:
     """Update metrics from adapter telemetry dict.
