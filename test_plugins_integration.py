@@ -3,6 +3,7 @@
 import sys
 import os
 import logging
+import os
 import unittest
 from unittest.mock import patch, MagicMock
 import numpy as np
@@ -30,6 +31,7 @@ class TestPlugins(unittest.TestCase):
             if name.startswith('kvopt'):
                 logging.getLogger(name).setLevel(logging.DEBUG)
     
+    @unittest.skipIf(os.getenv("KVOPT_LMCACHE", "0") != "1", "LMCache disabled (set KVOPT_LMCACHE=1 to enable)")
     def test_plugin_loading(self):
         """Test that plugins can be loaded and initialized."""
         from kvopt.config import Config
@@ -67,6 +69,7 @@ class TestPlugins(unittest.TestCase):
         self.assertIsNotNone(lmcache)
         self.assertIsNotNone(kivi)
     
+    @unittest.skipIf(os.getenv("KVOPT_LMCACHE", "0") != "1", "LMCache disabled (set KVOPT_LMCACHE=1 to enable)")
     @patch('redis.Redis')
     def test_lmcache_plugin(self, mock_redis):
         """Test LMCache plugin with mocked Redis."""

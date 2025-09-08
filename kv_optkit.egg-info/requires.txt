@@ -1,0 +1,10 @@
+fastapi>=0.110
+uvicorn>=0.23
+pydantic>=2
+PyYAML>=6
+numpy>=1.24
+prometheus-client>=0.16
+matplotlib>=3.7
+pandas>=2.0
+requests>=2.31
+httpx>=0.24

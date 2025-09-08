@@ -40,3 +40,15 @@ class Adapter(ABC):
     def get_sequences(self) -> List[Dict[str, Any]]:
         """Get information about all sequences in the KV cache."""
         pass
+
+    # ---- EngineAdapter protocol (non-breaking defaults) ----
+    def capabilities(self) -> set:
+        """Return a set of supported actions, e.g., {"EVICT","OFFLOAD","QUANTIZE","REUSE"}.
+
+        Default is empty set, meaning observe-only (L0). Implementers should override.
+        """
+        return set()
+
+    def get_telemetry_schema_version(self) -> str:
+        """Telemetry schema version for forward compatibility (default 'v1')."""
+        return "v1"

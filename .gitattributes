@@ -1,0 +1,27 @@
+# Exclude internal status tracker from GitHub release source archives
+# See: https://git-scm.com/docs/gitattributes#_export_ignore
+
+docs/status.md export-ignore
+
+#
+# Line ending normalization
+# Default: commit LF
+* text=auto eol=lf
+
+# Windows-native scripts keep CRLF
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+
+# Unix scripts explicitly LF
+*.sh text eol=lf
+
+# Explicit LF for common text formats
+*.py    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.toml  text eol=lf
+*.ini   text eol=lf
+*.txt   text eol=lf
+Dockerfile text eol=lf

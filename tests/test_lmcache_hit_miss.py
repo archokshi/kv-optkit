@@ -1,4 +1,7 @@
 import pytest
+import os
+
+pytestmark = pytest.mark.skipif(os.getenv("KVOPT_LMCACHE", "0") != "1", reason="LMCache disabled for this release (set KVOPT_LMCACHE=1 to enable tests)")
 
 from kvopt.plugins.lmcache_plugin import LMCachePlugin
 

@@ -17,11 +17,23 @@ from enum import Enum
 import json
 
 # Configuration
+# The original demo targeted a service on port 8000. Your current server exposes
+# simulation endpoints on port 9000 under /sim. We detect and use that for
+# sequence submission while keeping the 8000 endpoints for Autopilot/metrics
+# (which gracefully fall back to mock data if unavailable).
 BASE_URL = "http://localhost:8000"
 AUTOPILOT_ENDPOINT = f"{BASE_URL}/autopilot"
 SEQUENCES_ENDPOINT = f"{BASE_URL}/sequences"
 METRICS_ENDPOINT = f"{BASE_URL}/metrics"
 HEALTH_ENDPOINT = f"{BASE_URL}/health"
+
+# Sim API (detected at runtime)
+SIM_BASE = "http://localhost:9000"
+SIM_DEBUG = f"{SIM_BASE}/sim/debug"
+SIM_SUBMIT = f"{SIM_BASE}/sim/submit"
+
+# Cache detection result
+_sim_available: Optional[bool] = None
 
 class ActionType(str, Enum):
     EVICT = "evict"
@@ -60,12 +72,47 @@ def get_metrics() -> Dict[str, Any]:
             "memory_pressure": 0.65
         }
 
+def _detect_sim_api() -> bool:
+    """Detect if the /sim API on port 9000 is available."""
+    global _sim_available
+    if _sim_available is not None:
+        return _sim_available
+    try:
+        r = requests.get(SIM_DEBUG, timeout=2)
+        r.raise_for_status()
+        data = r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
+        _sim_available = bool(data) or r.status_code == 200
+    except Exception:
+        _sim_available = False
+    return _sim_available
+
+
 def submit_sequence(seq_id: str, length: int) -> bool:
-    """Submit a sequence to the system."""
+    """Submit a sequence to the system.
+
+    Prefer the running /sim API if detected; otherwise try the legacy demo
+    endpoint and fall back to mock submission so the demo can proceed.
+    """
+    # Try SIM API first if available
+    if _detect_sim_api():
+        try:
+            response = requests.post(
+                SIM_SUBMIT,
+                json={"seq_id": seq_id, "tokens": length},
+                timeout=5,
+            )
+            response.raise_for_status()
+            return True
+        except Exception as e:
+            print(f"Error submitting sequence {seq_id} to {SIM_SUBMIT}: {e}")
+            # Continue to legacy path before mocking
+
+    # Legacy demo endpoint (port 8000) if present
     try:
         response = requests.post(
             SEQUENCES_ENDPOINT,
-            json={"sequence_id": seq_id, "length_tokens": length}
+            json={"sequence_id": seq_id, "length_tokens": length},
+            timeout=5,
         )
         response.raise_for_status()
         return True

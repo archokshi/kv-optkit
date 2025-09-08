@@ -29,7 +29,7 @@ guardrails:
 # Plugin Configurations
 plugins:
   lmcache:
-    enabled: true
+    enabled: false  # disabled by default; set KVOPT_LMCACHE=1 and enable here to use
     priority: 10
     plugin_type: kv_cache
     backend: "fakeredis://"

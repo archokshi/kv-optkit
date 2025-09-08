@@ -13,15 +13,16 @@ from typing import Dict, Any, Optional, List
 
 from kvopt.config import Config
 from kvopt import __version__
-from kvopt.adapters.sim_adapter import SimAdapter
-from kvopt.adapters.vllm_adapter import VLLMAdapter
+from kvopt.adapters import create_adapter
 from kvopt.policy_engine import PolicyEngine
 from kvopt.agent import ActionExecutor, Guard
 from kvopt.plugin_manager import PluginManager
-from .metrics import update_from_telemetry, generate_metrics_response
+from .metrics import update_from_telemetry, generate_metrics_response, snapshot_engine_activity
 
 # Import routers
-from .routers import advisor, autopilot
+from .routers import advisor, autopilot, sim, sequences
+from .routers import quickview
+from .routers import dev_hooks as dev_hooks_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,10 +32,12 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Perform startup initialization
-    await startup_event()
-    yield
-    # Teardown (none for now)
-
+    try:
+        await startup_event()
+        yield
+        # Teardown (none for now)
+    except Exception as e:
+        logger.error(f"Error during startup: {e}")
 
 app = FastAPI(
     title="KV-OptKit API",
@@ -55,6 +58,11 @@ app.add_middleware(
 # Include routers
 app.include_router(advisor.router)
 app.include_router(autopilot.router)  # Add Autopilot router
+app.include_router(sim.router)  # Add Simulator router for demo endpoints
+app.include_router(quickview.router)  # Add QuickView at '/'
+app.include_router(sequences.router)  # Sidecar sequence lifecycle endpoints
+if os.getenv("KVOPT_DEV", "0").lower() in ("1", "true", "yes"):
+    app.include_router(dev_hooks_router.router)  # Development-only hooks
 
 # Global state
 _config: Optional[Config] = None
@@ -63,7 +71,78 @@ _policy_engine: Optional[PolicyEngine] = None
 _action_executor: Optional[ActionExecutor] = None
 _plugin_manager: Optional[PluginManager] = None
 _guard: Optional[Guard] = None
+_last_apply: Optional[Dict[str, Any]] = None
+_allow_apply: bool = True
 
+
+@app.get("/adapter/info")
+def get_adapter_info() -> Dict[str, Any]:
+    """Return adapter type and capability list for UI and debugging."""
+    try:
+        name = _config.adapter.type if _config and _config.adapter else "unknown"
+        caps = sorted(list((_adapter.capabilities() if _adapter else set()) or []))
+        return {"name": name, "capabilities": caps}
+    except Exception:
+        return {"name": "unknown", "capabilities": []}
+
+
+@app.get("/server/status")
+def get_server_status() -> Dict[str, Any]:
+    """Return high-level runtime status for QuickView header."""
+    try:
+        name = _config.adapter.type if _config and _config.adapter else "unknown"
+        caps = sorted(list((_adapter.capabilities() if _adapter else set()) or []))
+        mode = name
+        # Demo sequences flag (for vLLM adapter)
+        demo = False
+        try:
+            demo = bool(getattr(_adapter, "config", {}).get("demo_generate_sequences", False))
+        except Exception:
+            demo = False
+        # Sequence count if adapter exposes get_sequences
+        seq_count = 0
+        try:
+            if _adapter and hasattr(_adapter, "get_sequences"):
+                seq_count = len(_adapter.get_sequences() or [])
+        except Exception:
+            seq_count = 0
+        return {
+            "adapter": name,
+            "capabilities": caps,
+            "mode": mode,
+            "demo_sequences": demo,
+            "sequence_count": seq_count,
+            "allow_apply": bool(_allow_apply),
+        }
+    except Exception:
+        return {"adapter": "unknown", "capabilities": [], "mode": "unknown", "demo_sequences": False, "sequence_count": 0, "allow_apply": False}
+
+
+@app.post("/server/allow_apply")
+def set_allow_apply(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Toggle global allow_apply flag for Autopilot execute."""
+    global _allow_apply
+    try:
+        allow = bool(payload.get("allow"))
+        _allow_apply = allow
+        return {"ok": True, "allow_apply": _allow_apply}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "allow_apply": _allow_apply}
+
+@app.get("/guard/status")
+def get_guard_status() -> Dict[str, Any]:
+    """Return guard aggregated metrics and paused flag (if available)."""
+    try:
+        metrics = _guard.get_metrics_summary() if _guard else {"total_plans": 0}
+        # For now, paused is inferred from a placeholder flag; default False
+        return {"paused": False, "metrics": metrics}
+    except Exception:
+        return {"paused": False, "metrics": {}}
+
+
+@app.get("/apply/last")
+def get_last_apply() -> Dict[str, Any]:
+    return _last_apply or {}
 
 class HealthResponse(BaseModel):
     """Health check response model."""
@@ -149,6 +228,13 @@ async def startup_event():
         # Load configuration
         config_path = os.getenv("KVOPT_CONFIG", "config/config.yaml")
         _config = Config.from_yaml(config_path)
+        # Optional override: adapter type via env for zero-friction switching
+        if os.getenv("KVOPT_ADAPTER"):
+            try:
+                _config.adapter.type = os.getenv("KVOPT_ADAPTER").lower()
+                logger.info(f"Overriding adapter.type via KVOPT_ADAPTER={_config.adapter.type}")
+            except Exception:
+                logger.warning("KVOPT_ADAPTER set but could not override adapter.type; using config file value")
         
         # Initialize plugin manager
         _plugin_manager = PluginManager(_config)
@@ -160,14 +246,17 @@ async def startup_event():
         logger.info("Advisor router initialized")
         
         # Initialize adapter based on configuration
-        if _config.adapter.type == "sim":
-            _adapter = SimAdapter(_config.adapter.model_dump())
-        elif _config.adapter.type == "vllm":
-            _adapter = VLLMAdapter(_config.adapter.model_dump())
-        else:
-            raise ValueError(f"Unsupported adapter type: {_config.adapter.type}")
+        adapter_cfg = _config.adapter.model_dump()
+        # Optional demo sequences for vLLM adapter to visualize sequences without engine hooks
+        try:
+            if os.getenv("KVOPT_DEMO_SEQS", "0").lower() in ("1", "true", "yes"):
+                adapter_cfg["demo_generate_sequences"] = True
+        except Exception:
+            pass
+        atype = _config.adapter.type
+        _adapter = create_adapter(atype, adapter_cfg)
         
-        logger.info(f"Initialized {_config.adapter.type} adapter")
+        logger.info(f"Initialized {_config.adapter.type} adapter with capabilities: {sorted(list(_adapter.capabilities() or []))}")
         
         # Initialize policy engine
         _policy_engine = PolicyEngine(_config.policy)
@@ -176,6 +265,13 @@ async def startup_event():
         # Initialize action executor
         _action_executor = ActionExecutor(_adapter)
         logger.info("Action executor initialized")
+
+        # Apply global allow_apply from env (KVOPT_ALLOW_APPLY), default true
+        try:
+            val = os.getenv("KVOPT_ALLOW_APPLY", "1").lower()
+            globals()["_allow_apply"] = (val in ("1", "true", "yes"))
+        except Exception:
+            pass
         
         # Initialize guard
         _guard = Guard()
@@ -230,25 +326,43 @@ async def metrics():
     return Response(content=payload, media_type=content_type)
 
 
-if __name__ == "__main__":
-    import uvicorn
-    
-    uvicorn.run(
-        "kvopt.server.main:app",
-        host="0.0.0.0",
-        port=9000,
-        reload=True,
-        log_level="info"
-    )
+@app.get("/metrics/snapshot")
+async def metrics_snapshot():
+    """JSON snapshot of selected metrics for QuickView."""
+    try:
+        if _adapter is not None:
+            telemetry = _adapter.get_telemetry()
+            update_from_telemetry(telemetry)
+    except Exception:
+        pass
+    return snapshot_engine_activity()
+
+
+@app.get("/debug/routes")
+async def list_routes():
+    """Temporary diagnostic endpoint: list all registered routes."""
+    try:
+        return sorted([getattr(r, 'path', str(r)) for r in app.routes])
+    except Exception as e:
+        return {"error": str(e)}
+
+
 
 
 def run():
     """Console entrypoint: run the API server."""
     import uvicorn
+    import os
+
+    port = int(os.environ.get("KVOPT_PORT", 9000))
 
     uvicorn.run(
         "kvopt.server.main:app",
         host="0.0.0.0",
-        port=9000,
+        port=port,
+        reload=False,
         log_level="info"
     )
+
+if __name__ == "__main__":
+    run()

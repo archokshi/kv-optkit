@@ -3,6 +3,9 @@ Additional targeted tests for LMCachePlugin.
 Covers min_sequence_length gating and explicit hit/miss accounting using fakeredis.
 """
 import pytest
+import os
+
+pytestmark = pytest.mark.skipif(os.getenv("KVOPT_LMCACHE", "0") != "1", reason="LMCache disabled (set KVOPT_LMCACHE=1 to enable tests)")
 
 from kvopt.plugins.lmcache_plugin import LMCachePlugin
 

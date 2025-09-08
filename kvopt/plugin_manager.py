@@ -44,8 +44,14 @@ class PluginManager:
             return
         
         # Load all plugins
+        import os
+        lmcache_allowed = os.getenv("KVOPT_LMCACHE", "0") == "1"
         for name, config in self.config.plugins.items():
             if not config.enabled:
+                continue
+            # Temporarily disable LMCache plugin unless explicitly enabled via env
+            if name.lower() == "lmcache" and not lmcache_allowed:
+                logger.info("LMCache plugin disabled (set KVOPT_LMCACHE=1 to enable in this run)")
                 continue
             self._load_plugin(name, config)
         

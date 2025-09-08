@@ -1,0 +1,145 @@
+name: Phases E2E
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  phases-smoke:
+    name: Phases 1-3 (SIM)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Start KV-OptKit server (SIM :9001)
+        env:
+          KVOPT_ADAPTER: sim
+          KVOPT_PORT: '9001'
+        run: |
+          nohup python -m kvopt.server.main > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 6
+
+      - name: Validate Phases 1-3 (strict)
+        shell: pwsh
+        run: |
+          ./examples/validate_all_phases.ps1 -BaseUrl "http://localhost:9001" -ValidateObs:$false
+
+      - name: Print server log (on failure)
+        if: failure()
+        run: |
+          echo "==== server.log ===="
+          tail -n +1 server.log || true
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) || true; fi
+
+  phases-obs:
+    name: Phase 4 (Observability)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Start KV-OptKit server (SIM :9001)
+        env:
+          KVOPT_ADAPTER: sim
+          KVOPT_PORT: '9001'
+        run: |
+          nohup python -m kvopt.server.main > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 6
+
+      - name: Start Prometheus + Grafana (compose obs)
+        run: |
+          docker compose -f docker/compose.yml --profile obs up -d
+          # Give Prometheus a few seconds to come up
+          sleep 8
+
+      - name: Validate Observability via Prom API
+        shell: pwsh
+        run: |
+          ./examples/validate_obs.ps1 -Server "http://localhost:9001" -Prom "http://localhost:9090"
+
+      - name: Print server log (on failure)
+        if: failure()
+        run: |
+          echo "==== server.log ===="
+          tail -n +1 server.log || true
+
+      - name: Stop services
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) || true; fi
+          docker compose -f docker/compose.yml --profile obs down || true
+
+  phases-cpu-phase5:
+    name: Phase 5 (CPU-only availability)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Start KV-OptKit server (SIM :9001)
+        env:
+          KVOPT_ADAPTER: sim
+          KVOPT_PORT: '9001'
+        run: |
+          nohup python -m kvopt.server.main > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 6
+
+      - name: Validate Phase 5 (CPU-only)
+        shell: pwsh
+        run: |
+          ./examples/validate_phase5.ps1 -Server "http://localhost:9001"
+
+      - name: Print server log (on failure)
+        if: failure()
+        run: |
+          echo "==== server.log ===="
+          tail -n +1 server.log || true
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) || true; fi

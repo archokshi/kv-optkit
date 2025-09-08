@@ -1,0 +1,74 @@
+name: GPU Telemetry Parity
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install package (editable)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install requests pynvml || true
+
+      - name: Detect GPU / NVML / ROCm
+        id: detect
+        run: |
+          if command -v nvidia-smi >/dev/null 2>&1; then
+            echo "vendor=nvidia" >> $GITHUB_OUTPUT
+          elif command -v rocminfo >/dev/null 2>&1 || command -v amd-smi >/dev/null 2>&1; then
+            echo "vendor=rocm" >> $GITHUB_OUTPUT
+          else
+            echo "vendor=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Start KV-OptKit server (vLLM adapter)
+        env:
+          KVOPT_ADAPTER: vllm
+          KVOPT_PORT: '9001'
+        run: |
+          nohup python -m kvopt.server.main > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 5
+
+      - name: Telemetry parity (NVIDIA)
+        if: steps.detect.outputs.vendor == 'nvidia'
+        run: |
+          python scripts/telemetry_parity.py --server http://localhost:9001 --device 0 --tolerance 0.05
+
+      - name: Telemetry parity (ROCm)
+        if: steps.detect.outputs.vendor == 'rocm'
+        run: |
+          if ! command -v rocminfo >/dev/null 2>&1 && ! command -v amd-smi >/dev/null 2>&1; then
+            echo "No ROCm tools present; skipping"
+            exit 0
+          fi
+          python -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('rocm_smi_lib') else 1)" || pip install rocm_smi_lib
+          python scripts/telemetry_parity.py --server http://localhost:9001 --device 0 --tolerance 0.05
+
+      - name: Always print server logs
+        if: always()
+        run: |
+          echo '==== server.log ===='
+          cat server.log || true
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) || true; fi

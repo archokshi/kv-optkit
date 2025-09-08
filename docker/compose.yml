@@ -6,9 +6,10 @@ services:
     image: kv-optkit:dev
     container_name: kvopt-agent
     ports:
-      - "9000:9000"
+      - "9001:9001"
     environment:
       - KVOPT_CONFIG=config/config.yaml
+      - KVOPT_PORT=9001
     profiles: ["sim"]
 
   prometheus:
@@ -28,5 +29,5 @@ services:
       - ./grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
       - ./grafana-dashboard.json:/var/lib/grafana/dashboards/kvopt.json
     ports:
-      - "3000:3000"
+      - "3001:3000"
     profiles: ["obs"]

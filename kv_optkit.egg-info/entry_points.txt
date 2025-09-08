@@ -1,0 +1,7 @@
+[console_scripts]
+kvopt = kvopt.cli:main
+kvopt-autopilot = kvopt.cli:autopilot
+kvopt-quickstart = kvopt.cli:quickstart
+kvopt-serve = kvopt.cli:serve
+kvopt-server = kvopt.server.main:run
+kvopt-sidecar = kvopt.cli:sidecar

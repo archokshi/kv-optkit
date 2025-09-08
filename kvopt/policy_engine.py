@@ -72,7 +72,8 @@ class PolicyEngine:
         telemetry: Dict[str, Any],
         target_hbm_util: Optional[float] = None,
         max_actions: Optional[int] = None,
-        priority: PlanPriority = PlanPriority.MEDIUM
+        priority: PlanPriority = PlanPriority.MEDIUM,
+        allowed_actions: Optional[List[str]] = None,
     ) -> Plan:
         """
         Build an optimization plan based on the current system state.
@@ -102,7 +103,13 @@ class PolicyEngine:
         actions = []
         remaining_actions = max_actions
         
-        for action_type in self.config["action_priority"]:
+        # Determine generation order honoring allowed_actions if provided
+        gen_order = list(self.config["action_priority"]) if isinstance(self.config.get("action_priority"), list) else ["REUSE","EVICT","OFFLOAD","QUANTIZE"]
+        if allowed_actions:
+            allowed = {a.upper() for a in allowed_actions}
+            gen_order = [a for a in gen_order if a.upper() in allowed]
+
+        for action_type in gen_order:
             if remaining_actions <= 0:
                 break
                 

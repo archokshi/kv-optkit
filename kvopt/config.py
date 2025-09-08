@@ -30,7 +30,7 @@ class GuardrailSettings(BaseModel):
 
 class AdapterSettings(BaseModel):
     """Adapter configuration for server startup."""
-    type: Literal["sim", "vllm"] = "sim"
+    type: Literal["sim", "vllm", "tgi", "trtllm", "deepspeed"] = "sim"
     # Optional fields for adapters; passed through to adapter implementations
     hbm_capacity_gb: Optional[float] = None
     bytes_per_token: Optional[float] = None

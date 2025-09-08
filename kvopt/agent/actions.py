@@ -98,10 +98,31 @@ class Plan:
                 base.plan_id = update["id"]
         return base
 
+    def dict(self) -> Dict[str, Any]:
+        """Serialize Plan to a dictionary for API responses and tests.
+
+        Ensures action list and status are rendered to simple JSON-friendly types.
+        """
+        return {
+            "plan_id": self.plan_id,
+            "id": self.id,
+            "actions": [a.dict() for a in (self.actions or [])],
+            "priority": self.priority,
+            "estimated_hbm_reduction": float(self.estimated_hbm_reduction),
+            "estimated_accuracy_impact": float(self.estimated_accuracy_impact),
+            "created_at": float(self.created_at),
+            "status": self.status.value if isinstance(self.status, PlanStatus) else str(self.status),
+        }
+
+    def model_dump(self) -> Dict[str, Any]:
+        """Pydantic v2 compatibility alias."""
+        return self.dict()
+
 
 @dataclass
 class ActionResult:
     success: bool
+    message: str = ""
     details: Dict[str, Any] = field(default_factory=dict)
 
     def dict(self) -> Dict[str, Any]:

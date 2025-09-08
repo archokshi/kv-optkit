@@ -11,9 +11,9 @@ from .actions import (
     KVRef,
     Plan,
     PlanStatus,
-    ActionExecutor,
     ActionResult,
 )
+from .executor import ActionExecutor
 
 from .guard import Guard, GuardMetrics
 

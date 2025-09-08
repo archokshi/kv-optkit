@@ -1,0 +1,59 @@
+name: SIM Smoke Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  sim-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install package (editable)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Start KV-OptKit server (SIM) in background
+        env:
+          KVOPT_ADAPTER: sim
+          KVOPT_PORT: '9001'
+        run: |
+          nohup python -m kvopt.server.main > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 5
+          echo "Server PID: $(cat server.pid)"
+
+      - name: Probe health endpoints
+        run: |
+          curl -sSf http://localhost:9001/healthz | cat
+          curl -sSf http://localhost:9001/advisor/report | jq -e '.hbm_used_gb, .hbm_total_gb' >/dev/null
+
+      - name: Demo telemetry via CLI
+        env:
+          KVOPT_PORT: '9001'
+        run: |
+          python examples/demo_cli.py telemetry | tee telemetry.json
+          jq -e '.hbm_used_gb and .hbm_total_gb and .total_sequences' telemetry.json >/dev/null
+        
+      - name: Always print server logs
+        if: always()
+        run: |
+          echo '==== server.log ===='
+          cat server.log || true
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) || true; fi

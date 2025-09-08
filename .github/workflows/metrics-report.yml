@@ -1,0 +1,85 @@
+name: Metrics Report
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  metrics-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install package (editable)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install requests
+
+      - name: Start KV-OptKit server (SIM)
+        env:
+          KVOPT_ADAPTER: sim
+          KVOPT_PORT: '9001'
+        run: |
+          nohup python -m kvopt.server.main > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 5
+
+      - name: Perform guarded apply
+        run: |
+          # Ensure apply is allowed
+          curl -s -X POST http://localhost:9001/server/allow_apply \
+            -H 'Content-Type: application/json' \
+            -d '{"allow": true}'
+          # Request a small plan and apply it (not dry-run)
+          curl -s -X POST http://localhost:9001/autopilot/plan \
+            -H 'Content-Type: application/json' \
+            -d '{"target_hbm_util": 0.6, "max_actions": 2, "dry_run": false}'
+          sleep 2
+
+      - name: Scrape /metrics (after apply)
+        run: |
+          curl -sSf http://localhost:9001/metrics | tee metrics.txt > /dev/null
+          # Basic sanity checks
+          grep -q "kvopt_hbm_used_gb" metrics.txt
+          grep -q "kvopt_p95_latency_ms" metrics.txt
+          # Ensure apply success has incremented
+          SUCC=$(grep '^kvopt_apply_success_total' metrics.txt | awk '{print $2}' | head -n1)
+          if [ -z "$SUCC" ]; then echo "kvopt_apply_success_total missing"; exit 1; fi
+          python -c "import sys; v=float(sys.argv[1]); sys.exit(0 if v>0.0 else 1)" "$SUCC" || (echo "apply_success_total not > 0: $SUCC" && exit 1)
+
+      - name: Generate report
+        run: |
+          mkdir -p outputs
+          python tools/make_report.py --input metrics.txt --out outputs/report.md || true
+
+      - name: Validate report
+        run: |
+          if [ ! -f outputs/report.md ]; then echo "report.md missing"; exit 1; fi
+          grep -qi "hbm" outputs/report.md || (echo "HBM not found in report" && exit 1)
+          grep -qi "p95" outputs/report.md || (echo "p95 not found in report" && exit 1)
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: metrics-report
+          path: |
+            server.log
+            metrics.txt
+            outputs/
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) || true; fi

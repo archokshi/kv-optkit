@@ -1,11 +1,9 @@
-﻿[build-system]
+[build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "kv-optkit"
-version = "0.1.0-alpha.1"
-=======
 version = "0.1.0-alpha.1"
 description = "Optimization layer for LLM inference with KV-cache management"
 readme = "README.md"
@@ -22,8 +20,6 @@ dependencies = [
   "matplotlib>=3.7",
   "pandas>=2.0",
   "requests>=2.31",
-
-=======
   "httpx>=0.24",
 ]
 
@@ -42,5 +38,8 @@ include = ["kvopt*"]
 "*" = ["LICENSE", "README.md"]
 [project.scripts]
 kvopt-server = "kvopt.server.main:run"
-
-
+kvopt = "kvopt.cli:main"
+kvopt-serve = "kvopt.cli:serve"
+kvopt-quickstart = "kvopt.cli:quickstart"
+kvopt-autopilot = "kvopt.cli:autopilot"
+kvopt-sidecar = "kvopt.cli:sidecar"

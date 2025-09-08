@@ -9,8 +9,10 @@ import random
 import requests
 from typing import List, Dict, Any, Optional
 
-# Configuration
-BASE_URL = "http://localhost:9000"
+# Configuration: honor KVOPT_PORT if set; default to 9001 for consistency
+import os
+PORT = os.environ.get("KVOPT_PORT", "9001")
+BASE_URL = f"http://localhost:{PORT}"
 
 
 def print_report(report: Optional[Dict[str, Any]]) -> None:

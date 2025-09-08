@@ -2,6 +2,7 @@
 Tests for KV-OptKit plugins.
 """
 import pytest
+import os
 import numpy as np
 import tempfile
 import os
@@ -11,9 +12,11 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
-from kvopt.plugins.lmcache_plugin import LMCachePlugin, LMCacheConfig
+if os.getenv("KVOPT_LMCACHE", "0") == "1":
+    from kvopt.plugins.lmcache_plugin import LMCachePlugin, LMCacheConfig  # type: ignore
 from kvopt.plugins.kivi_plugin import KIVIPlugin, KIVIConfig
 
+@pytest.mark.skipif(os.getenv("KVOPT_LMCACHE", "0") != "1", reason="LMCache disabled (set KVOPT_LMCACHE=1 to enable tests)")
 class TestLMCachePlugin:
     """Tests for LMCachePlugin."""
     
@@ -171,6 +174,7 @@ class TestKIVIPlugin:
         
         plugin.on_shutdown()
 
+@pytest.mark.skipif(os.getenv("KVOPT_LMCACHE", "0") != "1", reason="LMCache disabled (set KVOPT_LMCACHE=1 to enable tests)")
 def test_plugin_integration():
     """Test that both plugins can work together."""
     # This is a simple integration test to verify both plugins can be used together

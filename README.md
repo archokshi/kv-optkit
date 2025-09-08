@@ -1,6 +1,17 @@
 # KV-OptKit
 
-KV-OptKit is a drop-in optimization layer for LLM inference that observes runtime behavior and continuously recommends—or automatically enforces—settings to keep KV-cache memory, batching, and tiered storage within budget while meeting P95 latency SLOs.
+![SIM Smoke Test](https://github.com/archokshi/kv-optkit/actions/workflows/sim-smoke.yml/badge.svg)
+![GPU Telemetry Parity](https://github.com/archokshi/kv-optkit/actions/workflows/gpu-parity.yml/badge.svg)
+![Metrics Report](https://github.com/archokshi/kv-optkit/actions/workflows/metrics-report.yml/badge.svg)
+
+KV-OptKit optimizes KV-cache memory for LLM inference to meet latency SLOs while staying within memory budgets. It provides an advisor for recommendations, a safe autopilot with rollback, and a simple UI (QuickView) to observe KPIs and apply plans.
+
+## Why KV-OptKit
+
+- Keep P95 latency within SLOs while controlling HBM/VRAM usage
+- Safe, revertible optimization via plan-based apply and rollback
+- Works out-of-the-box on CPU (SIM + vLLM demo sequences); easy GPU upgrade path
+- Clear, observable UI (QuickView) and Prometheus metrics for production
 
 ## Features
 
@@ -10,6 +21,33 @@ KV-OptKit is a drop-in optimization layer for LLM inference that observes runtim
 - **REST API**: Easy integration with existing systems
 - **Docker Support**: Containerized deployment
 - **Autopilot Mode**: Automated optimization with safety guards and shadow testing
+
+Run demos and learn more:
+
+- See the Demo Guide: [docs/README-demos.md](docs/README-demos.md)
+
+## Get Started
+
+Quick start in a new terminal:
+
+```powershell
+# (optional) create/activate venv
+python -m pip install --upgrade pip
+pip install -e .
+
+# Run server on :9001
+$env:KVOPT_PORT = "9001"
+python -m kvopt.server.main
+
+# Open QuickView
+# http://localhost:9001/
+```
+
+## Demos
+
+For a quick, hands-on walkthrough of Phase 1 and Phase 2 demos (combined and per-action), see the demo guide:
+
+- [Demo Guide (docs/README-demos.md)](docs/README-demos.md)
 
 ## Quick Start
 
@@ -41,20 +79,50 @@ KV-OptKit is a drop-in optimization layer for LLM inference that observes runtim
    ```bash
    # Option A: use the sample config
    set KVOPT_CONFIG=config\sample_config.yaml   # Windows PowerShell: $env:KVOPT_CONFIG="config/sample_config.yaml"
-   kvopt-server  # serves on :9000
+   # Serve on :9001 (QuickView)
+   set KVOPT_PORT=9001   # PowerShell: $env:KVOPT_PORT="9001"
+   kvopt-server
    # or
    python -m kvopt.server.main
    ```
 
 5. Verify health:
    ```bash
-   curl http://localhost:9000/healthz
+   curl http://localhost:9001/healthz
    ```
 
 6. In another terminal, run the demo (generates activity for SIM):
    ```bash
    python examples/demo_trace.py
    ```
+
+   Or use the new CLI and one-click PowerShell demo:
+
+   - CLI demo (Python):
+     ```bash
+     # Inspect live telemetry and advisor
+     python examples/demo_cli.py telemetry
+     python examples/demo_cli.py report
+
+     # Reset and create a couple sequences
+     python examples/demo_cli.py reset
+     python examples/demo_cli.py submit --seq seq_1 --tokens 2000
+     python examples/demo_cli.py submit --seq seq_2 --tokens 1200
+
+     # Apply optimizations
+     python examples/demo_cli.py quantize --seq seq_1 --start 0 --end 999 --factor 0.5
+     python examples/demo_cli.py offload --seq seq_2 --start 0 --end 799
+
+     # Verify effects
+     python examples/demo_cli.py telemetry
+     python examples/demo_cli.py report
+     ```
+
+   - One-click PowerShell demo (Windows):
+     ```powershell
+     # From the repository root
+     powershell -ExecutionPolicy Bypass -File .\examples\demo.ps1
+     ```
 
 ### Docker Compose
 
@@ -109,7 +177,7 @@ The Autopilot feature automates KV cache optimization with safety guarantees:
 #### 1. Create an Optimization Plan
 
 ```bash
-curl -X POST "http://localhost:9000/autopilot/plan" \
+curl -X POST "http://localhost:9001/autopilot/plan" \
   -H "Content-Type: application/json" \
   -d '{
     "target_hbm_util": 0.7,
@@ -121,13 +189,13 @@ curl -X POST "http://localhost:9000/autopilot/plan" \
 #### 2. Check Plan Status
 
 ```bash
-curl "http://localhost:9000/autopilot/plan/{plan_id}"
+curl "http://localhost:9001/autopilot/plan/{plan_id}"
 ```
 
 #### 3. Monitor Metrics
 
 ```bash
-curl "http://localhost:9000/autopilot/metrics"
+curl "http://localhost:9001/autopilot/metrics"
 ```
 
 ### Python example (requests)
@@ -135,7 +203,7 @@ curl "http://localhost:9000/autopilot/metrics"
 ```python
 import requests
 
-base = "http://localhost:9000"
+base = "http://localhost:9001"
 
 # Create a plan
 r = requests.post(
@@ -266,7 +334,7 @@ Extras summary:
 - Docker (GHCR):
 
 ```bash
-docker run -p 9000:9000 ghcr.io/archokshi/kv-optkit:latest
+docker run -p 9001:9001 -e KVOPT_PORT=9001 ghcr.io/archokshi/kv-optkit:latest
 ```
 
 - Docker Compose profiles:
@@ -325,7 +393,7 @@ docker compose -f docker/compose.yml up -d prometheus grafana
 
 - Prometheus UI: http://localhost:9090
   - Example queries: `kvopt_hbm_utilization`, `kvopt_p95_latency_ms`, `kvopt_ttft_ms`
-- Grafana UI: http://localhost:3000
+- Grafana UI: http://localhost:3001
   - Dashboard: "KV-OptKit" (provisioned via `docker/grafana-dashboard.json`)
 
 ### Report generator
@@ -422,6 +490,12 @@ Notes:
 | SIM | L0–L3 | Full feature surface for development/testing |
 | TGI | L0 | Early support; subject to change |
 | DeepSpeed-MII | L0 | Early support; subject to change |
+
+## Demos
+
+For all demo flows (Phase 1, 2, and Phase 5 quickstarts including sidecar), see the dedicated demo guide:
+
+- [Demo Guide (docs/README-demos.md)](docs/README-demos.md)
 
 ## Releases
 

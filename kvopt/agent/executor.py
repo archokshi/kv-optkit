@@ -9,13 +9,13 @@ from dataclasses import dataclass, field
 import time
 import logging
 
-from ..adapters.base import BaseAdapter
+from ..adapters.base import Adapter
 from .actions import Action, ActionResult, Plan
 
 logger = logging.getLogger(__name__)
 
 # Type variable for the adapter type
-A = TypeVar('A', bound=BaseAdapter)
+A = TypeVar('A', bound=Adapter)
 
 
 @dataclass
@@ -48,6 +48,7 @@ class ActionExecutor(Generic[A]):
         self._transaction_log: List[TransactionLogEntry] = []
         self._in_transaction = False
         self._last_error: Optional[str] = None
+        self._snapshot: Optional[Dict[str, Any]] = None
     
     @property
     def last_error(self) -> Optional[str]:
@@ -68,6 +69,14 @@ class ActionExecutor(Generic[A]):
         self._transaction_log = []
         self._in_transaction = True
         self._last_error = None
+        # Capture a full adapter snapshot for reliable rollback when available
+        try:
+            if hasattr(self.adapter, "snapshot_state"):
+                self._snapshot = self.adapter.snapshot_state()
+            else:
+                self._snapshot = None
+        except Exception:
+            self._snapshot = None
         logger.debug("Transaction started")
         return True
     
@@ -84,6 +93,7 @@ class ActionExecutor(Generic[A]):
             
         self._transaction_log = []
         self._in_transaction = False
+        self._snapshot = None
         logger.debug("Transaction committed")
         return True
     
@@ -100,20 +110,31 @@ class ActionExecutor(Generic[A]):
             
         logger.info(f"Rolling back {len(self._transaction_log)} actions")
         success = True
-        
-        # Roll back in reverse order
-        for entry in reversed(self._transaction_log):
-            if entry.success and entry.pre_state is not None:
-                try:
-                    self._restore_state(entry.action, entry.pre_state)
-                    logger.debug(f"Rolled back action: {entry.action.kind}")
-                except Exception as e:
-                    success = False
-                    logger.error(f"Error rolling back action {entry.action.id}: {e}")
-                    self._last_error = f"Rollback failed: {str(e)}"
-        
+
+        # Prefer full adapter snapshot restore if available
+        if self._snapshot is not None and hasattr(self.adapter, "restore_state"):
+            try:
+                self.adapter.restore_state(self._snapshot)
+                logger.debug("Adapter state restored from snapshot")
+            except Exception as e:
+                success = False
+                logger.error(f"Error restoring adapter snapshot: {e}")
+                self._last_error = f"Rollback failed: {str(e)}"
+        else:
+            # Fallback: best-effort per-action restore in reverse order
+            for entry in reversed(self._transaction_log):
+                if entry.success and entry.pre_state is not None:
+                    try:
+                        self._restore_state(entry.action, entry.pre_state)
+                        logger.debug(f"Rolled back action: {entry.action.kind}")
+                    except Exception as e:
+                        success = False
+                        logger.error(f"Error rolling back action {entry.action.id}: {e}")
+                        self._last_error = f"Rollback failed: {str(e)}"
+
         self._in_transaction = False
         self._transaction_log = []
+        self._snapshot = None
         
         if success:
             logger.debug("Rollback completed successfully")
@@ -187,35 +208,25 @@ class ActionExecutor(Generic[A]):
         try:
             # Capture pre-state
             entry.pre_state = self._capture_state(action)
-            
-            # Execute the action
-            if action.kind == "EVICT":
-                result = self.adapter.evict(
-                    action.target.seq_id,
-                    action.target.start_token,
-                    action.target.end_token
-                )
-            elif action.kind == "OFFLOAD":
-                result = self.adapter.offload(
-                    action.target.seq_id,
-                    action.target.start_token,
-                    action.target.end_token
-                )
-            elif action.kind == "QUANTIZE":
-                result = self.adapter.quantize(
-                    action.target.seq_id,
-                    action.target.start_token,
-                    action.target.end_token,
-                    action.params.get("factor", 0.5)
-                )
-            elif action.kind == "DEQUANTIZE":
-                result = self.adapter.dequantize(
-                    action.target.seq_id,
-                    action.target.start_token,
-                    action.target.end_token
-                )
+
+            # Build adapter payload and execute via generic execute_action
+            payload: Dict[str, Any] = {
+                "action_type": getattr(action.action_type, "value", str(action.action_type)),
+                "sequence_id": getattr(action.target, "sequence_id", None),
+            }
+            # Translate params: QUANTIZE uses 'scale' in our model; simulator expects 'factor'
+            params = dict(getattr(action, "params", {}) or {})
+            if payload["action_type"] == "QUANTIZE" and "scale" in params and "factor" not in params:
+                params["factor"] = params["scale"]
+            payload.update(params)
+
+            # Execute against adapter
+            result = {}
+            if hasattr(self.adapter, "execute_action"):
+                ok = bool(self.adapter.execute_action(payload))
+                result = {"success": ok, "payload": payload}
             else:
-                raise ValueError(f"Unknown action type: {action.kind}")
+                raise ValueError("Adapter does not support execute_action")
             
             # Update entry with results
             entry.success = result.get("success", False)
@@ -229,26 +240,27 @@ class ActionExecutor(Generic[A]):
             if self._in_transaction:
                 self._transaction_log.append(entry)
             
-            logger.debug(f"Executed {action.kind} on {action.target.seq_id} "
-                       f"tokens {action.target.start_token}-{action.target.end_token}")
+            logger.debug(
+                f"Executed {payload.get('action_type')} on {payload.get('sequence_id')}"
+            )
             
             return ActionResult(
                 True,
-                f"Successfully executed {action.kind}",
+                f"Successfully executed {payload.get('action_type')}",
                 result
             )
             
         except Exception as e:
             entry.success = False
             entry.result = {"error": str(e)}
-            logger.error(f"Error executing {action.kind}: {str(e)}", exc_info=True)
+            logger.error(f"Error executing action: {str(e)}", exc_info=True)
             
             if self._in_transaction:
                 self._transaction_log.append(entry)
                 
             return ActionResult(
                 False,
-                f"Failed to execute {action.kind}: {str(e)}",
+                f"Failed to execute action: {str(e)}",
                 {"error": str(e)}
             )
             
@@ -273,11 +285,9 @@ class ActionExecutor(Generic[A]):
         # In a real implementation, this would capture more detailed state
         # needed for rollback
         return {
-            "sequence_id": action.target.seq_id,
-            "start_token": action.target.start_token,
-            "end_token": action.target.end_token,
-            "action_type": action.kind,
-            "timestamp": time.time()
+            "sequence_id": getattr(action.target, "sequence_id", None),
+            "action_type": getattr(getattr(action, "action_type", None), "value", None),
+            "timestamp": time.time(),
         }
     
     def _restore_state(self, action: Action, state: Dict[str, Any]) -> bool:
