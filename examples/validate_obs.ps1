@@ -32,11 +32,28 @@ $queries = @(
 )
 
 foreach ($q in $queries) {
-  $resp = Invoke-Json "$Prom/api/v1/query?query=$([uri]::EscapeDataString($q))"
-  if ($resp.status -ne 'success') { throw "Prom query failed: $q" }
-  $result = $resp.data.result
-  if ($result.Count -lt 1) { throw "Prom found no series for: $q" }
-  Write-Host "[Obs] OK $q -> $(($result | ConvertTo-Json -Compress))" -ForegroundColor Green
+  $attempts = 0
+  $maxAttempts = 10
+  $intervalSec = 2
+  $ok = $false
+  while (-not $ok -and $attempts -lt $maxAttempts) {
+    $attempts += 1
+    $resp = Invoke-Json "$Prom/api/v1/query?query=$([uri]::EscapeDataString($q))"
+    if ($resp.status -ne 'success') {
+      Write-Host "[Obs] Prom query failed (attempt $attempts/$maxAttempts): $q" -ForegroundColor Yellow
+      Start-Sleep -Seconds $intervalSec
+      continue
+    }
+    $result = $resp.data.result
+    if ($result.Count -lt 1) {
+      Write-Host "[Obs] No series yet for $q (attempt $attempts/$maxAttempts), waiting for Prom scrape..." -ForegroundColor Yellow
+      Start-Sleep -Seconds $intervalSec
+      continue
+    }
+    $ok = $true
+    Write-Host "[Obs] OK $q -> $(($result | ConvertTo-Json -Compress))" -ForegroundColor Green
+  }
+  if (-not $ok) { throw "Prom found no series for: $q" }
 }
 
 Write-Host "[Obs] Observability validation passed." -ForegroundColor Green
