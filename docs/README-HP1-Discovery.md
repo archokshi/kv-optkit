@@ -1,4 +1,24 @@
 # Horizontal Phase HP1: Discovery
+## Quick Verify
+
+Run these one-liners in PowerShell to validate HP1 endpoints on the default port 9001.
+
+```powershell
+Invoke-RestMethod http://localhost:9001/healthz    | ConvertTo-Json -Depth 4
+Invoke-RestMethod http://localhost:9001/v1/hw      | ConvertTo-Json -Depth 4
+Invoke-RestMethod http://localhost:9001/v1/workload| ConvertTo-Json -Depth 4
+Invoke-RestMethod http://localhost:9001/v1/profile | ConvertTo-Json -Depth 4
+```
+
+If you see JSON responses for each, HP1 is healthy.
+
+---
+
+## Where to go next
+
+- Phase 6 (CPU A/B demos): see `docs/README-phase6.md`
+- Phase 7 (GPU scaffolding): see `docs/README-phase7.md`
+
 ---
 
 ## Validate HP1 (Windows PowerShell)

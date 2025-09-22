@@ -5,6 +5,7 @@ This guide walks you through the demos included with KV-OptKit. It is designed f
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
+- [Horizontal Phases](#horizontal-phases)
 - [Phase 1: Advisor (Recommendations Only)](#phase-1-advisor-recommendations-only)
 - [Phase 2: Autopilot (Combined Plan)](#phase-2-autopilot-combined-plan)
 - [Phase 2: Individual Action Demos](#phase-2-individual-action-demos)
@@ -25,6 +26,8 @@ This guide walks you through the demos included with KV-OptKit. It is designed f
   - [Telemetry Parity (NVIDIA/AMD/torch)](#telemetry-parity-nvidiaamdtorch)
   - [Governor Verification](#governor-verification)
   - [Apply Toggle](#apply-toggle)
+- [Phase 6: CPU A/B Demos](#phase-6-cpu-ab-demos)
+- [Phase 7: GPU Scaffolding](#phase-7-gpu-scaffolding)
 - [Maintainers: In-Process vLLM Hook Wiring](#maintainers-in-process-vllm-hook-wiring)
 
 ## Prerequisites
@@ -39,6 +42,15 @@ Start the server in a separate terminal for all demos:
 $env:KVOPT_PORT=9001
 python -m kvopt.server.main
 ```
+
+---
+
+## Horizontal Phases
+
+Horizontal phases apply to every demo phase. Start here first:
+
+- HP1: Discovery – hardware/runtime detection, workload hints, profile selection, and safe provisioning plan.
+  - See: [README-HP1-Discovery.md](README-HP1-Discovery.md)
 
 ---
 
@@ -541,4 +553,84 @@ if ad:
 ```
 
 After wiring, QuickView’s “Engine Activity” and `/metrics` counters will update from real events, and adapter rollbacks use event-based deltas.
+
+
+---
+
+## Phase 6: CPU A/B Demos
+
+Phase 6 provides standardized CPU A/B comparisons using a simple vLLM CPU server plus KV‑OptKit, with optional LMCache via Redis. It includes 5 single scenarios and 3 A/B pairs, a reliable warm step, and a consistent Grafana experience with four dashboards in the `KV-OptKit` folder.
+
+Full guide: [docs/README-phase6.md](README-phase6.md)
+
+Quick links:
+
+- Single scenarios runner: `scripts/demos/run_scenario.ps1`
+- A/B runner: `scripts/demos/run_cpu_ab.ps1`
+- Grafana (all scenarios): [http://localhost:3001/](http://localhost:3001/) (folder `KV-OptKit`)
+
+---
+
+## Phase 7: GPU Scaffolding
+
+Phase 7 introduces a GPU-backed path using vLLM with a CUDA image plus full observability. It also provides a no‑GPU development mode so you can validate wiring on Windows without hardware.
+
+### No‑GPU development path (SIM)
+
+- Services: `kvopt`, `prometheus`, `grafana` (no `vllm`).
+- Expected: Prometheus target `kvopt` is UP; vLLM target shows DOWN (expected). GPU/TTFT/LMCache panels show “No data”.
+
+```powershell
+$env:KVOPT_ADAPTER = "sim"
+$env:UPSTREAM_VLLM_URL = ""
+
+docker compose -f docker/demos/gpu/docker-compose.gpu.baseline.yaml `
+  up -d --build --no-deps kvopt prometheus grafana
+
+# Generate some traffic
+1..100 | % {
+  Invoke-RestMethod http://localhost:9001/healthz | Out-Null
+  Invoke-RestMethod http://localhost:9001/v1/hw | Out-Null
+  Invoke-RestMethod http://localhost:9001/v1/workload | Out-Null
+  Invoke-RestMethod http://localhost:9001/v1/profile | Out-Null
+}
+```
+
+Open:
+- Prometheus: http://localhost:9090/targets
+- Grafana: http://localhost:3000 (folder `KV-OptKit`, Phase 7 GPU dashboard)
+
+### GPU validation path (vLLM)
+
+Prereq: A host with an NVIDIA GPU (WSL2 GPU on Windows, native Linux, or cloud VM) and Docker + NVIDIA container runtime.
+
+```powershell
+# Build CUDA vLLM image (one-time)
+docker build -f docker/Dockerfile.vllm_gpu_cuda -t kvopt/vllm-gpu:dev .
+
+# Bring up baseline GPU stack (vLLM + KV-OptKit + Prometheus + Grafana)
+docker compose -f docker/demos/gpu/docker-compose.gpu.baseline.yaml up -d --build
+
+# Warm + short traffic
+powershell -ExecutionPolicy Bypass -File scripts/demos/run_gpu_scenario.ps1 `
+  -Compose docker/demos/gpu/docker-compose.gpu.baseline.yaml `
+  -Scenario baseline_gpu -StayUp
+```
+
+Advisor + LMCache stack:
+
+```powershell
+docker compose -f docker/demos/gpu/docker-compose.gpu.advisor.lmcache.yaml up -d --build
+powershell -ExecutionPolicy Bypass -File scripts/demos/run_gpu_scenario.ps1 `
+  -Compose docker/demos/gpu/docker-compose.gpu.advisor.lmcache.yaml `
+  -Scenario advisor_with_lmcache_gpu -StayUp
+```
+
+Dashboards:
+- Phase 7 GPU dashboard: GPU Utilization, HBM Used/Util, TTFT/P95.
+- LMCache panels (hits/misses/bytes) populate in the advisor+LMCache stack.
+
+Troubleshooting:
+- If Grafana port 3000 is in use, stop the conflicting container (e.g., `open-webui`) or change port mapping.
+- If vLLM target is DOWN on a GPU host, ensure the compose stack is up and the CUDA image built successfully.
 
