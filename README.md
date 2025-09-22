@@ -6,6 +6,17 @@
 
 KV-OptKit optimizes KV-cache memory for LLM inference to meet latency SLOs while staying within memory budgets. It provides an advisor for recommendations, a safe autopilot with rollback, and a simple UI (QuickView) to observe KPIs and apply plans.
 
+## What’s new in v0.1.0-alpha.3
+
+- HP1 Discovery quick-verify and CLI. See `docs/README-HP1-Discovery.md`.
+- Phase 6 CPU A/B runbook and demo stacks. See `docs/README-phase6.md`.
+- Phase 7 GPU scaffolding: CUDA vLLM image, compose stacks, Prometheus/Grafana provisioning, warm scripts. See `docs/README-phase7.md`.
+
+Quick links:
+- HP1: `docs/README-HP1-Discovery.md`
+- Phase 6 (CPU A/B): `docs/README-phase6.md`
+- Phase 7 (GPU scaffolding): `docs/README-phase7.md`
+
 ## Why KV-OptKit
 
 - Keep P95 latency within SLOs while controlling HBM/VRAM usage
