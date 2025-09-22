@@ -17,12 +17,8 @@ jobs:
         with:
           python-version: '3.11'
       - name: Normalize pyproject (strip BOM if present)
-        shell: bash
         run: |
-          if [ "$(xxd -p -l 3 pyproject.toml 2>/dev/null || echo '')" = "efbbbf" ]; then
-            echo "Stripping UTF-8 BOM from pyproject.toml";
-            tail -c +4 pyproject.toml > pyproject.nobom && mv pyproject.nobom pyproject.toml;
-          fi
+          python -c "import pathlib;p=pathlib.Path('pyproject.toml');d=p.read_bytes();p.write_bytes(d[3:] if d.startswith(b'\xef\xbb\xbf') else d)"
       - name: Build and publish PyPI
         env:
           TWINE_USERNAME: __token__
