@@ -1,0 +1,36 @@
+# Phase 7: CUDA-enabled vLLM image
+# Base: CUDA 12.1 + cuDNN on Ubuntu 22.04 (Jammy)
+FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3.10 python3.10-venv python3-pip git curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a venv to keep the image clean
+RUN python3.10 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
+
+# Upgrade pip and install CUDA-enabled PyTorch, vLLM, LMCache
+# PyTorch cu121 wheel index is implied by the version spec below.
+RUN pip install --upgrade pip && \
+    pip install "torch==2.3.*" --index-url https://download.pytorch.org/whl/cu121 && \
+    pip install "vllm==0.5.*" "lmcache>=0.1.0" "fastapi>=0.110" "uvicorn>=0.23" "requests>=2.31"
+
+# Expose vLLM OpenAI API port
+EXPOSE 8000
+
+# Healthcheck: try listing models after container starts
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=5 \
+    CMD curl -fsSL http://localhost:8000/v1/models || exit 1
+
+# Default model (small, fits common GPUs); override with -e MODEL=...
+ENV MODEL="TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+
+# Entrypoint runs the OpenAI-compatible API server
+ENTRYPOINT ["bash", "-lc", "python -m vllm.entrypoints.openai.api_server --model ${MODEL} --host 0.0.0.0 --port 8000"]

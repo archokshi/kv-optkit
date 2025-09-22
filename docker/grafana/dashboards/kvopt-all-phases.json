@@ -1,0 +1,108 @@
+{
+  "title": "KV-OptKit All Phases (1-6)",
+  "uid": "kvopt-all",
+  "tags": ["kvopt", "all-phases"],
+  "timezone": "",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "title": "HBM Utilization",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [ { "expr": "kvopt_hbm_utilization" } ],
+      "fieldConfig": { "defaults": { "unit": "percentunit" }, "overrides": [] }
+    },
+    {
+      "title": "HBM Used (GB)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [ { "expr": "kvopt_hbm_used_gb" } ]
+    },
+    {
+      "title": "Autopilot Applies (total)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [ { "expr": "kvopt_autopilot_applies_total" } ]
+    },
+    {
+      "title": "Apply Success/Fail (total)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "kvopt_apply_success_total", "legendFormat": "success" },
+        { "expr": "kvopt_apply_fail_total", "legendFormat": "fail" }
+      ]
+    },
+    {
+      "title": "Governor Throttle Events (Phase 6)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [ { "expr": "kvopt_governor_throttle_events_total" } ],
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "title": "Offload Governed Bytes (Phase 6)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [ { "expr": "kvopt_offload_governed_bytes_total" } ]
+    },
+    {
+      "title": "Offload Tick Cap (Bytes)",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [ { "expr": "kvopt_offload_tick_cap_bytes" } ],
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
+    },
+    {
+      "title": "HTTP Requests (server)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [ { "expr": "sum by (path)(rate(http_requests_total[1m]))" } ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" } }
+    },
+    {
+      "title": "Process CPU Seconds",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "targets": [ { "expr": "rate(process_cpu_seconds_total[1m])" } ]
+    },
+    {
+      "title": "TTFT (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "targets": [ { "expr": "kvopt_ttft_ms" } ],
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "title": "LMCache Hit Rate (5m)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+      "targets": [
+        {
+          "expr": "clamp_min(rate(lmc_cache_hits_total[5m]) / (rate(lmc_cache_hits_total[5m]) + rate(lmc_cache_misses_total[5m])), 0)",
+          "legendFormat": "hit_rate"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit" }, "overrides": [] }
+    },
+    {
+      "title": "LMCache Hits/Misses",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+      "targets": [
+        { "expr": "rate(lmc_cache_hits_total[1m])", "legendFormat": "hits/s" },
+        { "expr": "rate(lmc_cache_misses_total[1m])", "legendFormat": "misses/s" }
+      ]
+    },
+    {
+      "title": "LMCache Evictions",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 48 },
+      "targets": [ { "expr": "rate(lmc_cache_evictions_total[1m])" } ]
+    }
+  ]
+}

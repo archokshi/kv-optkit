@@ -1,0 +1,49 @@
+services:
+  vllm:
+    build:
+      context: ../..
+      dockerfile: Dockerfile.vllm_cpu_simple
+    environment:
+      - MODEL=${MODEL:-sshleifer/tiny-gpt2}
+      - PORT=8000
+    ports:
+      - "8000:8000"
+
+  kvopt:
+    build:
+      context: ../../..
+    
+      dockerfile: Dockerfile.demo
+    environment:
+      - KVOPT_PORT=9001
+      - UPSTREAM_VLLM_URL=http://vllm:8000
+      - KVOPT_DEMO_SEQS=1
+      - KVOPT_CPU_ONLY_MODE=true
+      - KVOPT_ENABLE_ADVISOR=true
+      - KVOPT_ENABLE_LMCACHE=false
+    ports:
+      - "${KVOPT_PORT:-9001}:9001"
+    depends_on:
+      - vllm
+    working_dir: /app/kv-optkit
+    command: ["python", "-m", "kvopt.server.main"]
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ../../prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    volumes:
+      - ../../grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+      - ../../grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ../../grafana-dashboard.json:/var/lib/grafana/dashboards/kvopt-phase6-cpu.json:ro

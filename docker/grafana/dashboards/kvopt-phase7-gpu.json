@@ -1,0 +1,102 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "title": "KV-OptKit Phase 7 - GPU",
+  "uid": "kvopt-phase7-gpu",
+  "version": 1,
+  "schemaVersion": 36,
+  "panels": [
+    {
+      "type": "row",
+      "title": "GPU Overview",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "GPU Utilization (%)",
+      "targets": [
+        { "expr": "avg_over_time(nvidia_gpu_utilization[5m])" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HBM Used (GB)",
+      "targets": [
+        { "expr": "avg_over_time(nvidia_gpu_memory_used_bytes[5m]) / 1024 / 1024 / 1024" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HBM Utilization (%)",
+      "targets": [
+        { "expr": "avg_over_time(nvidia_gpu_memory_utilization[5m])" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "KV-OptKit Latency",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "TTFT (ms)",
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(kvopt_ttft_seconds_bucket[1m])) by (le)) * 1000" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "P95 latency (ms)",
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(kvopt_request_latency_seconds_bucket[1m])) by (le)) * 1000" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "LMCache",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "LMCache Hit Rate (%)",
+      "targets": [
+        { "expr": "(sum(rate(lmcache_hits_total[1m])) / (sum(rate(lmcache_hits_total[1m])) + sum(rate(lmcache_misses_total[1m])))) * 100" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "LMCache Hits / Misses",
+      "targets": [
+        { "expr": "sum(rate(lmcache_hits_total[1m]))" },
+        { "expr": "sum(rate(lmcache_misses_total[1m]))" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "LMCache Warmed / Recalled (bytes/s)",
+      "targets": [
+        { "expr": "sum(rate(lmcache_warmed_bytes_total[1m]))" },
+        { "expr": "sum(rate(lmcache_recalled_bytes_total[1m]))" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Autopilot",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Autopilot Applies / Apply Success",
+      "targets": [
+        { "expr": "sum(rate(kvopt_applies_total[1m]))" },
+        { "expr": "sum(rate(kvopt_apply_success_total[1m]))" }
+      ]
+    }
+  ],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" }
+}

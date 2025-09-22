@@ -5,6 +5,30 @@ All notable changes to KV-OptKit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-alpha.3] - 2025-09-21
+
+### Added
+- HP1 Discovery foundation
+  - Endpoints: `/v1/hw`, `/v1/workload`, `/v1/profile`, `/healthz`
+  - CLI: `kvopt hp1 hw|workload|profile|plan`
+  - Tests: `tests/test_hp1_endpoints.py`, `tests/test_hp1_resolver.py`
+- Phase 6 (CPU A/B) demos
+  - Baseline vs LMCache (Redis) using a simple CPU server
+  - Compose stacks under `docker/demos/cpu/`, runbook in `docs/README-phase6.md`
+  - Grafana dashboards provisioned under folder `KV-OptKit`
+- Phase 7 (GPU) scaffolding
+  - CUDA vLLM image at `docker/Dockerfile.vllm_gpu_cuda`
+  - GPU compose stacks: `docker/demos/gpu/docker-compose.gpu.baseline.yaml` and `docker/demos/gpu/docker-compose.gpu.advisor.lmcache.yaml`
+  - Prometheus and Grafana provisioning: `docker/demos/gpu/prometheus.yml`, `docker/demos/gpu/grafana-provisioning/**`
+  - Dashboard: `docker/grafana/dashboards/kvopt-phase7-gpu.json`
+  - Warm/traffic scripts: `scripts/demos/run_gpu_scenario.ps1`, `scripts/demos/run_gpu_ab.ps1`
+  - No‑GPU SIM mode to validate KV‑OptKit + observability on dev machines
+
+### Known limitations
+- GPU panels (GPU Util, HBM, TTFT/P95) require a real GPU host
+- LMCache panels populate only in the advisor+LMCache GPU stack
+- vLLM Prometheus scrape shows DOWN in no‑GPU runs (expected)
+
 ## [Unreleased]
 
 ### Added

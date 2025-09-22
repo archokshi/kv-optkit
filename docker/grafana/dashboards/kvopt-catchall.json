@@ -1,0 +1,61 @@
+{
+  "annotations": {"list": [{"builtIn": 1, "datasource": {"type": "grafana", "uid": "-- Grafana --"}, "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "type": "dashboard"}]},
+  "editable": true,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {"type": "stat", "title": "HBM Used (GB)", "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}, "targets": [{"expr": "kvopt_hbm_used_gb"}], "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}}},
+    {"type": "gauge", "title": "HBM Utilization (%)", "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}, "targets": [{"expr": "kvopt_hbm_utilization * 100"}]},
+    {"type": "stat", "title": "P95 Latency (ms)", "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}, "targets": [{"expr": "kvopt_p95_latency_ms"}]},
+
+    {"type": "timeseries", "title": "TTFT (ms)", "gridPos": {"h": 6, "w": 12, "x": 0, "y": 4}, "targets": [{"expr": "kvopt_ttft_ms"}]},
+    {"type": "timeseries", "title": "P95 Latency (ms)", "gridPos": {"h": 6, "w": 12, "x": 12, "y": 4}, "targets": [{"expr": "kvopt_p95_latency_ms"}]},
+
+    {"type": "timeseries", "title": "Apply Success/Fail (rate)", "gridPos": {"h": 6, "w": 12, "x": 0, "y": 10},
+     "targets": [
+       {"expr": "rate(kvopt_apply_success_total[1m]) or on() vector(0)", "legendFormat": "success/s"},
+       {"expr": "rate(kvopt_apply_fail_total[1m]) or on() vector(0)",    "legendFormat": "fail/s"}
+     ]
+    },
+    {"type": "bargauge", "title": "Apply Success vs Fail (totals)", "gridPos": {"h": 6, "w": 12, "x": 12, "y": 10},
+     "targets": [
+       {"expr": "kvopt_apply_success_total or on() vector(0)", "legendFormat": "success"},
+       {"expr": "kvopt_apply_fail_total or on() vector(0)",    "legendFormat": "fail"}
+     ]
+    },
+
+    {"type": "timeseries", "title": "Engine Activity: alloc/free (bytes/s)", "gridPos": {"h": 6, "w": 12, "x": 0, "y": 16},
+     "targets": [
+       {"expr": "clamp_min(rate(kvopt_engine_alloc_bytes_total[1m]), 0) or on() vector(0)", "legendFormat": "alloc"},
+       {"expr": "clamp_min(rate(kvopt_engine_free_bytes_total[1m]), 0) or on() vector(0)",  "legendFormat": "free"}
+     ]
+    },
+    {"type": "timeseries", "title": "Engine Activity: moves (events/s)", "gridPos": {"h": 6, "w": 12, "x": 12, "y": 16},
+     "targets": [
+       {"expr": "clamp_min(rate(kvopt_engine_page_moves_total[1m]), 0) or on() vector(0)", "legendFormat": "moves/s"}
+     ]
+    },
+
+    {"type": "timeseries", "title": "Governed Bytes (bytes/s)", "gridPos": {"h": 6, "w": 24, "x": 0, "y": 22},
+     "targets": [
+       {"expr": "clamp_min(rate(kvopt_offload_governed_bytes_total[1m]), 0) or on() vector(0)", "legendFormat": "governed bytes/s"}
+     ]
+    },
+
+    {"type": "stat", "title": "Reuse Hits",   "gridPos": {"h": 4, "w": 6, "x": 0,  "y": 28}, "targets": [{"expr": "kvopt_lmcache_hits_total or kvopt_reuse_hits_total or on() vector(0)"}]},
+    {"type": "stat", "title": "Reuse Misses", "gridPos": {"h": 4, "w": 6, "x": 6,  "y": 28}, "targets": [{"expr": "kvopt_lmcache_misses_total or kvopt_reuse_misses_total or on() vector(0)"}]},
+    {"type": "timeseries", "title": "LMCache Bytes: Warmed/Recalled (rate)",  "gridPos": {"h": 4, "w": 6, "x": 12, "y": 28},
+      "targets": [
+        {"expr": "clamp_min(rate(kvopt_lmcache_bytes_warmed_total[1m]),0) or on() vector(0)", "legendFormat": "warmed B/s"},
+        {"expr": "clamp_min(rate(kvopt_lmcache_bytes_recalled_total[1m]),0) or on() vector(0)", "legendFormat": "recalled B/s"}
+      ]
+    },
+    {"type": "timeseries", "title": "DDR Utilization", "gridPos": {"h": 4, "w": 6, "x": 18, "y": 28}, "targets": [{"expr": "kvopt_ddr_utilization or on() vector(0)"}]}
+  ],
+  "refresh": "10s",
+  "schemaVersion": 41,
+  "tags": ["kvopt", "all"],
+  "title": "KV-OptKit",
+  "uid": "kvopt-catchall",
+  "version": 1
+}

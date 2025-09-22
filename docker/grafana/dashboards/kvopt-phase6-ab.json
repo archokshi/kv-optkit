@@ -1,0 +1,31 @@
+{
+  "title": "KV-OptKit Phase 6 A/B (CPU)",
+  "uid": "kvopt-ab-cpu",
+  "tags": ["kvopt", "phase6", "ab"],
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    { "title": "TTFT (ms)", "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [ { "expr": "kvopt_ttft_ms" } ] },
+    { "title": "HTTP Requests by path (1m rate)", "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [ { "expr": "sum by (path)(rate(http_requests_total[1m]))" } ] },
+    { "title": "Autopilot Applies total", "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [ { "expr": "kvopt_autopilot_applies_total" } ] },
+    { "title": "Apply Success/Fail total", "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [ { "expr": "kvopt_apply_success_total", "legendFormat": "success" }, { "expr": "kvopt_apply_fail_total", "legendFormat": "fail" } ] },
+    { "title": "LMCache Hit Rate (5m)", "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [ { "expr": "clamp_min(rate(kvopt_lmcache_hits_total[5m]) / (rate(kvopt_lmcache_hits_total[5m]) + rate(kvopt_lmcache_misses_total[5m])), 0) or on() vector(0)" } ] },
+    { "title": "LMCache Hits/Misses (1m rate)", "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        { "expr": "clamp_min(rate(kvopt_lmcache_hits_total[1m]),0) or on() vector(0)", "legendFormat": "hits/s" },
+        { "expr": "clamp_min(rate(kvopt_lmcache_misses_total[1m]),0) or on() vector(0)", "legendFormat": "misses/s" }
+      ] },
+    { "title": "LMCache Bytes: Warmed/Recalled (1m rate)", "type": "timeseries", "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "targets": [
+        { "expr": "clamp_min(rate(kvopt_lmcache_bytes_warmed_total[1m]),0) or on() vector(0)", "legendFormat": "warmed B/s" },
+        { "expr": "clamp_min(rate(kvopt_lmcache_bytes_recalled_total[1m]),0) or on() vector(0)", "legendFormat": "recalled B/s" }
+      ] }
+  ]
+}

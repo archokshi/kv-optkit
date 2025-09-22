@@ -1,0 +1,58 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --appendonly yes
+
+  vllm:
+    build:
+      context: ../..
+      dockerfile: Dockerfile.vllm_cpu_simple
+    environment:
+      - MODEL=${MODEL:-sshleifer/tiny-gpt2}
+      - PORT=8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+
+  kvopt:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile.demo
+    environment:
+      - KVOPT_PORT=9001
+      - UPSTREAM_VLLM_URL=http://vllm:8000
+      - KVOPT_DEMO_SEQS=1
+      - KVOPT_CPU_ONLY_MODE=true
+      - KVOPT_ENABLE_ADVISOR=true
+      - KVOPT_ENABLE_LMCACHE=true
+      - LMCACHE_BACKEND=redis://redis:6379
+    ports:
+      - "${KVOPT_PORT:-9001}:9001"
+    depends_on:
+      - vllm
+      - redis
+    working_dir: /app/kv-optkit
+    command: ["python", "-m", "kvopt.server.main"]
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ../../prometheus.lmcache.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    volumes:
+      - ../../grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../../grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../../grafana/dashboards:/var/lib/grafana/dashboards:ro

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kv-optkit"
-version = "0.1.0-alpha.2"
+version = "0.1.0a3"
 description = "Optimization layer for LLM inference with KV-cache management"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -22,6 +22,11 @@ dependencies = [
   "requests>=2.31",
   "httpx>=0.24",
 ]
+
+[project.entry-points."kvopt.plugins"]
+"lmcache.reuse" = "kvopt.plugins.lmcache.reuse:LMCacheReuse"
+"lmcache.offload" = "kvopt.plugins.lmcache.offload:LMCacheOffload"
+"lmcache.prefetch" = "kvopt.plugins.lmcache.prefetch:LMCachePrefetch"
 
 [project.urls]
 Homepage = "https://github.com/archokshi/kv-optkit"
